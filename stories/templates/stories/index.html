@@ -1,0 +1,91 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Stories{% endblock %}
+
+{% block content %}
+<section class="stories-page">
+    <header class="stories-hero">
+        <div>
+            <span class="eyebrow"><span class="eyebrow-dot"></span> {% if is_archive %}SAQLANGAN LAHZALAR{% else %}24 SOAT ICHIDA{% endif %}</span>
+            <h1>{% if is_archive %}Arxiv{% else %}Stories{% endif %}</h1>
+            <p>{% if is_archive %}24 soatdan keyin yo‘qolgan storylaringiz shu yerda saqlanadi va faqat sizga ko‘rinadi.{% else %}Kun davomida bo‘layotgan lahzalarni rasm yoki video qilib ulashing.{% endif %}</p>
+        </div>
+        {% if user.is_authenticated and not is_archive %}
+            <form method="post" action="{% url 'stories:create' %}" enctype="multipart/form-data" class="stories-create-form">
+                {% csrf_token %}
+                <label class="stories-add-button" for="story-upload-input" title="Rasm yoki video tanlang" aria-label="Story uchun rasm yoki video tanlang">+</label>
+                <input id="story-upload-input" type="file" name="media" accept="image/*,video/*" required>
+                <div class="stories-create-fields">
+                    <label for="story-caption">Izoh <span>(ixtiyoriy)</span></label>
+                    <input id="story-caption" type="text" name="caption" placeholder="Storyingizga izoh yozing..." maxlength="220">
+                    <span class="stories-file-name" data-story-file-name>Rasm yoki video tanlang</span>
+                </div>
+                <button type="submit" class="button button-primary stories-submit-button">Story joylash</button>
+                <div class="stories-preview" data-story-preview hidden>
+                    <div class="story-upload-preview-media" data-story-preview-media></div>
+                    <span>Tanlangan media preview</span>
+                </div>
+            </form>
+        {% elif not user.is_authenticated %}
+            <a class="button button-primary stories-login-button" href="{% url 'login' %}?next={% url 'stories:index' %}">Kirish va story qo‘shish</a>
+        {% endif %}
+    </header>
+
+    <section class="stories-library" aria-labelledby="stories-library-title">
+        <nav class="stories-tabs" aria-label="Stories bo‘limlari">
+            <a href="{% url 'stories:index' %}" class="stories-tab {% if not is_archive %}is-active{% endif %}">Faol stories</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'stories:archive' %}" class="stories-tab {% if is_archive %}is-active{% endif %}">Arxiv <span>24 soatdan keyin</span></a>
+            {% endif %}
+        </nav>
+        <div class="stories-library-heading">
+            <div>
+                <span class="eyebrow"><span class="eyebrow-dot"></span> {% if is_archive %}FAQAT SIZGA KO‘RINADI{% else %}SIZNING LENTANGIZ{% endif %}</span>
+                <h2 id="stories-library-title">{% if is_archive %}Arxivlangan stories{% else %}Yangi stories{% endif %}</h2>
+            </div>
+            <span class="stories-expiry-note">{% if is_archive %}Storylar arxivda o‘chirilmaguncha saqlanadi{% else %}Faol story 24 soatdan so‘ng arxivga o‘tadi{% endif %}</span>
+        </div>
+        <div class="stories-grid">
+            {% for story in stories %}
+                <a href="{% url 'story_viewer' story.id %}" class="stories-card {% if story.id in seen_story_ids %}is-seen{% endif %} {% if is_archive %}is-archived{% endif %}">
+                    <div class="stories-card-media">
+                        {% if story.media %}
+                            {% if story.media_type == 'video' %}
+                                <video src="{{ story.media.url }}" muted playsinline preload="metadata"></video>
+                                <span class="stories-video-badge" aria-label="Video">▶</span>
+                            {% else %}
+                                <img src="{{ story.media.url }}" alt="" loading="lazy">
+                            {% endif %}
+                        {% else %}
+                            <span class="stories-card-placeholder" aria-hidden="true">✦</span>
+                        {% endif %}
+                        <span class="stories-card-shade"></span>
+                        <div class="stories-card-user">
+                            {% if story.user.profile.avatar %}
+                                <img src="{{ story.user.profile.avatar.url }}" alt="">
+                            {% elif story.user.profile.avatar_url %}
+                                <img src="{{ story.user.profile.avatar_url }}" alt="">
+                            {% else %}
+                                <span class="stories-avatar-fallback">{{ story.user.username|first|upper }}</span>
+                            {% endif %}
+                            <strong>{{ story.user.username }}</strong>
+                        </div>
+                        {% if is_archive %}
+                            <span class="stories-card-caption">Arxiv · {{ story.created_at|date:"j M Y, H:i" }}</span>
+                            {% if story.caption %}<span class="stories-card-archive-caption">{{ story.caption }}</span>{% endif %}
+                        {% elif story.caption %}
+                            <span class="stories-card-caption">{{ story.caption }}</span>
+                        {% endif %}
+                    </div>
+                </a>
+            {% empty %}
+                <div class="stories-empty">
+                    <span class="stories-empty-icon" aria-hidden="true">✦</span>
+                    <h3>{% if is_archive %}Arxiv hozircha bo‘sh{% else %}Hozircha yangi story yo‘q{% endif %}</h3>
+                    <p>{% if is_archive %}Joylagan storylaringiz 24 soat tugagach avtomatik shu yerda qoladi.{% elif user.is_authenticated %}Birinchi bo‘lib story joylang yoki yangi storylar uchun foydalanuvchilarni kuzating.{% else %}Yangi storylarni ko‘rish uchun hisobingizga kiring.{% endif %}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</section>
+{% endblock %}

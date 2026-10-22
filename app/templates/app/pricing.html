@@ -1,0 +1,54 @@
+{% extends 'app/base.html' %}
+{% block title %}Tariflar{% endblock %}
+
+{% block content %}
+<section class="pricing-page page-reveal">
+    <div class="section-label">
+        <span>TARIFLAR</span>
+        <span class="label-rule"></span>
+        <span>01 / NARXLAR</span>
+    </div>
+
+    <div class="pricing-hero">
+        <div class="pricing-hero-copy">
+            <p class="eyebrow"><span class="eyebrow-dot"></span> YANGI TAVSIF</p>
+            <h1>O‘zingizga mos xizmat narxini tanlang</h1>
+            <p>Quyidagi tariflar sizga postlarni ko‘proq ulashish, ko‘proq foydalanuvchilar bilan ishlash va professional ko‘rinishni beradi.</p>
+        </div>
+        <div class="pricing-badge-wrap">
+            <div class="pricing-badge">
+                <span>24/7</span>
+                <small>Yordam</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="pricing-grid">
+        {% for plan in plans %}
+            <article class="pricing-card {% if plan.featured %}pricing-card-featured{% endif %}">
+                {% if plan.featured %}
+                    <span class="pricing-popular">Eng ommabop</span>
+                {% endif %}
+                <div class="pricing-card-header">
+                    <p class="pricing-tier">{{ plan.name }}</p>
+                    <div class="pricing-price-row">
+                        <span class="pricing-price">{{ plan.price }}</span>
+                        <span class="pricing-currency">{{ plan.currency }}</span>
+                    </div>
+                    <span class="pricing-badge-pill">{{ plan.badge }}</span>
+                </div>
+
+                <ul class="pricing-features">
+                    {% for feature in plan.features %}
+                        <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+
+                <a href="{% url 'register' %}" class="button {% if plan.featured %}button-primary{% else %}button-quiet{% endif %}">
+                    {{ plan.name }} dan boshlash
+                </a>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

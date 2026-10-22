@@ -1,0 +1,88 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Story viewer{% endblock %}
+
+{% block content %}
+<div class="story-viewer-shell">
+    <div class="story-viewer-card">
+        <div class="story-topbar">
+            <div class="story-progress-wrap">
+                {% for item in story_list %}
+                    <span class="story-progress-segment {% if item.id == story.id %}active{% elif forloop.counter < story_index|add:'1' %}done{% endif %}"></span>
+                {% endfor %}
+            </div>
+            <div class="story-viewer-head">
+                <div class="story-view-name">
+                    {% if story.user.profile and story.user.profile.avatar %}
+                        <img src="{{ story.user.profile.avatar.url }}" alt="{{ story.user.username }} avatar">
+                    {% elif story.user.profile and story.user.profile.avatar_url %}
+                        <img src="{{ story.user.profile.avatar_url }}" alt="{{ story.user.username }} avatar">
+                    {% else %}
+                        <div class="story-view-avatar-fallback">{{ story.user.username|first|upper }}</div>
+                    {% endif %}
+                    <div>
+                        <strong>{{ story.user.username }}</strong>
+                        <small>{% if is_archived_story %}Arxivdagi story{% else %}{{ story.created_at|timesince }} avval{% endif %}</small>
+                    </div>
+                </div>
+                <a href="{% if is_archived_story %}{% url 'stories:archive' %}{% else %}{% url 'stories:index' %}{% endif %}" class="story-close-btn" aria-label="Close">✕</a>
+            </div>
+        </div>
+
+        <div class="story-media-wrap">
+            {% if story.media %}
+                {% if story.media_type == 'video' %}
+                    <video class="story-video" controls autoplay muted playsinline>
+                        <source src="{{ story.media.url }}" type="video/mp4">
+                    </video>
+                {% else %}
+                    <img src="{{ story.media.url }}" alt="{{ story.user.username }} story" class="story-image">
+                {% endif %}
+            {% endif %}
+            {% if story.caption %}
+                <p class="story-caption">{{ story.caption }}</p>
+            {% endif %}
+        </div>
+
+        <div class="story-navigation">
+            {% if prev_story_id %}
+                <a href="{% url 'story_viewer' prev_story_id %}" class="story-nav-btn story-nav-left">←</a>
+            {% endif %}
+            {% if next_story_id %}
+                <a href="{% url 'story_viewer' next_story_id %}" class="story-nav-btn story-nav-right">→</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+  (function () {
+    const storyIds = [{% for item in story_list %}{{ item.id }},{% endfor %}];
+    const currentIndex = {{ story_index }};
+    const cards = storyIds.length;
+
+    const advance = function () {
+      if (currentIndex < cards - 1) {
+        window.location.href = '/stories/' + storyIds[currentIndex + 1] + '/';
+      } else {
+        window.location.href = '{% if is_archived_story %}{% url "stories:archive" %}{% else %}{% url "stories:index" %}{% endif %}';
+      }
+    };
+
+    setTimeout(advance, 5000);
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'ArrowRight' && currentIndex < cards - 1) {
+        window.location.href = '/stories/' + storyIds[currentIndex + 1] + '/';
+      }
+      if (event.key === 'ArrowLeft' && currentIndex > 0) {
+        window.location.href = '/stories/' + storyIds[currentIndex - 1] + '/';
+      }
+      if (event.key === 'Escape') {
+        window.location.href = '{% if is_archived_story %}{% url "stories:archive" %}{% else %}{% url "stories:index" %}{% endif %}';
+      }
+    });
+  })();
+</script>
+{% endblock %}

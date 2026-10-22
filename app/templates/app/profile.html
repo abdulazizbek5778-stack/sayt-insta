@@ -1,0 +1,241 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load socialaccount %}
+{% block title %}{{ username }} · Profil{% endblock %}
+
+{% block content %}
+<section class="profile-page page-reveal">
+    <div class="section-label">
+        <span>SHAXSIY SAHIFA</span>
+        <span class="label-rule"></span>
+        <span>01 / PROFIL</span>
+    </div>
+
+    <!-- Asosiy Profil Kartasi -->
+    <div class="profile-hero">
+        <div class="portrait-panel">
+            <div class="portrait-backdrop"></div>
+            {% if avatar_url %}
+                <img class="profile-avatar" src="{{ avatar_url }}" alt="{{ username }} profil rasmi">
+            {% else %}
+                <img class="profile-avatar" src="{% static 'app/avatar-placeholder.svg' %}" alt="Yuzsiz profil rasmi">
+            {% endif %}
+            <span class="portrait-caption">PROFIL EGASI</span>
+        </div>
+
+        <div class="profile-intro">
+            <p class="eyebrow"><span class="eyebrow-dot"></span> XUSH KELIBSIZ</p>
+            <h1>{{ username }}</h1>
+            <p class="profile-bio">{{ bio }}</p>
+
+            <div class="profile-quick-stats">
+                <div class="quick-stat-badge">
+                    <span class="stat-number">{{ posts_count|default:"0" }}</span>
+                    <span class="stat-label">post</span>
+                </div>
+                <div class="quick-stat-badge">
+                    <a href="{% url 'user_connections' username 'followers' %}">
+                        <span class="stat-number">{{ followers_count }}</span>
+                        <span class="stat-label">kuzatuvchi</span>
+                    </a>
+                </div>
+                <div class="quick-stat-badge">
+                    <a href="{% url 'user_connections' username 'following' %}">
+                        <span class="stat-number">{{ following_count }}</span>
+                        <span class="stat-label">kuzatilmoqda</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                {% if is_owner %}
+                    <a class="button button-primary" href="{% url 'edit_profile' %}">Profilni tahrirlash <span aria-hidden="true">↗</span></a>
+                    <a class="button button-quiet" href="{% url 'home' %}">Lentani ko‘rish</a>
+                {% elif user.is_authenticated %}
+                    <form method="post" action="{% url 'toggle_follow' username %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button class="button button-primary" type="submit">{% if is_following %}Kuzatishni bekor qilish{% else %}Kuzatish{% endif %}</button>
+                    </form>
+                    <a class="button button-quiet" href="{% url 'chat' %}?user={{ profile_user.id }}">Xabar yozish</a>
+                {% else %}
+                    <a class="button button-primary" href="{% url 'register' %}">Men ham qo‘shilaman <span aria-hidden="true">↗</span></a>
+                    <a class="button button-quiet" href="{% url 'login' %}?next={{ request.path }}">Kirish</a>
+                {% endif %}
+            </div>
+
+            {% if not is_owner and not user.is_authenticated %}
+                <div class="social-login home-social-login">
+                    {% if google_oauth_enabled %}
+                        <a class="google-login" href="{% provider_login_url 'google' process='login' %}">
+                            <span class="google-mark" aria-hidden="true"></span>
+                            Google bilan kirish yoki ro‘yxatdan o‘tish
+                        </a>
+                    {% else %}
+                        <button class="google-login is-disabled" type="button" disabled>
+                            <span class="google-mark" aria-hidden="true"></span>
+                            Google bilan kirish yoki ro‘yxatdan o‘tish
+                        </button>
+                        <small class="google-note">
+                            Google OAuth kalitlarini .env fayliga kiriting.
+                            Redirect URI: <code>{{ google_oauth_callback_url }}</code>
+                        </small>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="hero-index" aria-hidden="true"><span>S</span><small>SAHIFA<br>NO. 01</small></div>
+    </div>
+
+    <!-- Profil Tafsilotlari (Ortiqcha narsalarsiz, ixcham) -->
+    <section class="profile-details" aria-label="Profil ma’lumotlari">
+        <div class="detail-heading"><span class="eyebrow">MA’LUMOTLAR</span><span class="detail-heading-line"></span></div>
+        {% if is_owner %}
+            <div class="detail-row"><span class="detail-number">01</span><span class="detail-label">Email manzili</span><strong>{{ email }}</strong></div>
+            <div class="detail-row"><span class="detail-number">02</span><span class="detail-label">Telefon raqami</span><strong>{{ phone|default:"Kiritilmagan" }}</strong></div>
+        {% endif %}
+        <div class="detail-row"><span class="detail-number">03</span><span class="detail-label">Bio</span><strong>{{ bio }}</strong></div>
+    </section>
+
+    {% if is_owner %}
+        <!-- Yangi Post Qo'shish Formasi (Faqat Profil qismida) -->
+        <section class="post-create-section" id="create-post">
+            <div class="section-label">
+                <span>YANGI KONTENT</span>
+                <span class="label-rule"></span>
+                <span>POST YARATISH</span>
+            </div>
+
+            <div class="post-create-card">
+                <div class="post-create-header">
+                    <div class="create-header-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                    </div>
+                    <div>
+                        <h2>Yangi post qo‘shish</h2>
+                        <p class="create-subtitle">Fikrlaringiz, rasm yoki videolaringizni umumiy lentaga ulashing</p>
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="post-create-form">
+                    {% csrf_token %}
+
+                    <div class="form-row-group">
+                        <label for="{{ post_form.title.id_for_label }}" class="field-label">
+                            Title: <span class="required-mark">*</span>
+                        </label>
+                        {{ post_form.title }}
+                        {% if post_form.title.errors %}
+                            <p class="field-error">{{ post_form.title.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row-group">
+                        <label for="{{ post_form.desc.id_for_label }}" class="field-label">
+                            Desc:
+                        </label>
+                        {{ post_form.desc }}
+                        {% if post_form.desc.errors %}
+                            <p class="field-error">{{ post_form.desc.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="media-upload-hero">
+                        <div class="media-upload-box media-upload-primary">
+                            <label for="{{ post_form.img.id_for_label }}" class="field-label media-upload-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                Foto qo‘shish
+                            </label>
+                            <div class="custom-file-wrapper custom-file-wrapper-primary">
+                                {{ post_form.img }}
+                            </div>
+                            {% if post_form.img.errors %}
+                                <p class="field-error">{{ post_form.img.errors.0 }}</p>
+                            {% endif %}
+                            <div class="live-media-preview" id="img-preview-box" style="display: none;">
+                                <img id="img-preview" src="#" alt="Tanlangan rasm">
+                            </div>
+                        </div>
+
+                        <div class="media-upload-box media-upload-secondary">
+                            <label for="{{ post_form.video.id_for_label }}" class="field-label media-upload-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                                Video
+                            </label>
+                            <div class="custom-file-wrapper custom-file-wrapper-secondary">
+                                {{ post_form.video }}
+                            </div>
+                            {% if post_form.video.errors %}
+                                <p class="field-error">{{ post_form.video.errors.0 }}</p>
+                            {% endif %}
+                            <div class="live-media-preview" id="video-preview-box" style="display: none;">
+                                <video id="video-preview" controls></video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-submit-row">
+                        <button type="submit" class="button button-primary submit-post-btn">
+                            <span>Ulashish</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    {% endif %}
+
+    <section class="user-posts-section" aria-label="Foydalanuvchi postlari">
+            <div class="section-label">
+                <span>{% if is_owner %}MENING POSTLARIM{% else %}POSTLAR{% endif %}</span>
+                <span class="label-rule"></span>
+                <span>{{ posts_count }} TA ULASHUV</span>
+            </div>
+
+            {% if user_posts %}
+                <div class="user-posts-grid">
+                    {% for p in user_posts %}
+                        <article class="user-post-item" id="post-{{ p.id }}">
+                            {% if p.img %}
+                                <div class="user-post-thumb">
+                                    <img src="{{ p.img.url }}" alt="{{ p.title }}">
+                                </div>
+                            {% elif p.video %}
+                                <div class="user-post-thumb video-thumb">
+                                    <video src="{{ p.video.url }}" preload="metadata"></video>
+                                    <span class="video-play-indicator">▶</span>
+                                </div>
+                            {% endif %}
+                            <div class="user-post-item-body">
+                                <div class="user-post-item-meta">
+                                    <span class="user-post-item-date">{{ p.created_at|date:"d.m.Y H:i" }}</span>
+                                    {% if is_owner %}
+                                        <form method="post" action="{% url 'delete_post' p.id %}" onsubmit="return confirm('Haqiqatdan ham ushbu postni o‘chirmoqchimisiz?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="item-delete-btn" title="O‘chirish" aria-label="O‘chirish">✕</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                                <h3 class="user-post-item-title">{{ p.title }}</h3>
+                                {% if p.desc %}
+                                    <p class="user-post-item-desc">{{ p.desc|truncatechars:120 }}</p>
+                                {% endif %}
+                                <div class="user-post-item-actions">
+                                    <a href="#post-{{ p.id }}" class="user-post-view-link">
+                                        <span>Postni ko‘rish</span>
+                                        <span aria-hidden="true">↗</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-user-posts">
+                    <p>{% if is_owner %}Siz hali post ulashmadingiz. Yuqoridagi formadan birinchi postingizni joylang.{% else %}Bu foydalanuvchi hali post ulashmagan.{% endif %}</p>
+                </div>
+            {% endif %}
+        </section>
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block title %}Profilni tahrirlash{% endblock %}
+{% block content %}
+<section class="edit-layout page-reveal">
+    <div class="edit-heading"><span class="eyebrow">SHAXSIY SAHIFA / SOZLAMALAR</span><h1>Profilni tahrirlash</h1><p>Profil ma’lumotlaringizni yangilang.</p></div>
+    <div class="edit-content">
+        <div class="edit-preview">
+            {% if profile.avatar %}<img class="edit-avatar" data-avatar-preview src="{{ profile.avatar.url }}" alt="Joriy profil rasmi">
+            {% elif profile.avatar_url %}<img class="edit-avatar" data-avatar-preview src="{{ profile.avatar_url }}" alt="Joriy profil rasmi">
+            {% else %}<img class="edit-avatar" data-avatar-preview src="{% static 'app/avatar-placeholder.svg' %}" alt="Yuzsiz profil rasmi">{% endif %}
+            <div><strong>{{ user.username }}</strong><span>Profil rasmi</span></div>
+        </div>
+        <form method="post" enctype="multipart/form-data" class="auth-form">{% csrf_token %}
+            <div class="field-group"><label for="{{ form.bio.id_for_label }}">Qisqacha ma’lumot</label>{{ form.bio }}{% for error in form.bio.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="field-group"><label for="{{ form.phone.id_for_label }}">Telefon raqami</label>{{ form.phone }}{% for error in form.phone.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="field-group"><label for="{{ form.avatar.id_for_label }}">Profil rasmi</label>{{ form.avatar }}<small class="field-help">JPG, PNG, GIF yoki WEBP. 5 MB gacha.</small>{% for error in form.avatar.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>
+            <div class="auth-submit-row"><button class="button button-primary submit-button" type="submit">Saqlash <span aria-hidden="true">↗</span></button><a class="cancel-link" href="{% url 'profile' %}">Bekor qilish</a></div>
+        </form>
+    </div>
+</section>
+{% endblock %}

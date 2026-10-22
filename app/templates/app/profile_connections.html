@@ -1,0 +1,48 @@
+{% extends 'app/base.html' %}
+{% block title %}{{ title }} · @{{ profile_user.username }}{% endblock %}
+
+{% block content %}
+<section class="profile-page page-reveal">
+    <div class="section-label">
+        <span>@{{ profile_user.username }}</span>
+        <span class="label-rule"></span>
+        <span>{{ title|upper }}</span>
+    </div>
+
+    <section class="user-posts-section" aria-label="{{ title }}">
+        <div class="section-label">
+            <h1>{{ title }} · @{{ profile_user.username }}</h1>
+            <a class="button button-quiet" href="{% url 'user_profile' profile_user.username %}">Profilga qaytish</a>
+        </div>
+        {% if connections %}
+            <div class="user-posts-grid">
+                {% for connected_user in connections %}
+                    <article class="user-post-item">
+                        <div class="user-post-item-body">
+                            <h2 class="user-post-item-title">
+                                <a href="{% url 'user_profile' connected_user.username %}">@{{ connected_user.username }}</a>
+                            </h2>
+                            {% if connected_user.get_full_name %}
+                                <p class="user-post-item-desc">{{ connected_user.get_full_name }}</p>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+            {% if page_obj.has_other_pages %}
+                <nav class="feed-pagination" aria-label="Ro‘yxat sahifalari">
+                    {% if page_obj.has_previous %}
+                        <a class="button button-quiet" href="?page={{ page_obj.previous_page_number }}">← Oldingi</a>
+                    {% endif %}
+                    <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                    {% if page_obj.has_next %}
+                        <a class="button button-quiet" href="?page={{ page_obj.next_page_number }}">Keyingi →</a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="empty-user-posts"><p>Bu ro‘yxat hozircha bo‘sh.</p></div>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

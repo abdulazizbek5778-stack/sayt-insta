@@ -1,0 +1,132 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block title %}Jonli Chat · Jamiyat Muloqoti{% endblock %}
+
+{% block content %}
+<section class="chat-page-section page-reveal">
+    <div class="chat-hero-banner">
+        <div class="section-label">
+            <span>HAMJAMIYAT CHATI</span>
+            <span class="label-rule"></span>
+            <span>REAL VAQTDA MULOQOT</span>
+        </div>
+        
+        <div class="chat-hero-header">
+            <div>
+                <span class="eyebrow chat-pulse-eyebrow">
+                    <span class="eyebrow-dot"></span> JONLI ALOQA
+                </span>
+                <h1 class="chat-main-title">Foydalanuvchilar bilan jonli muloqot</h1>
+                <p class="chat-main-subtitle">
+                    Saytdagi barcha a’zolar bilan xohlagan mavzuda shaxsiy xabar almashing va suhbatlashing.
+                </p>
+            </div>
+            <div class="chat-stats-strip">
+                <div class="chat-stat-box">
+                    <span class="chat-stat-num">{{ online_count|default:"1" }}</span>
+                    <span class="chat-stat-lbl">Onlayn hozir</span>
+                </div>
+                <div class="chat-stat-box">
+                    <span class="chat-stat-num">{{ total_users }}</span>
+                    <span class="chat-stat-lbl">Jami a’zo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+        <div class="community-chat-panel fullpage-chat-panel" id="community-chat"
+             data-contacts-url="{% url 'chat_contacts' %}"
+             data-message-url-template="{% url 'chat_messages' user_id=0 %}"
+             data-current-user-id="{{ user.id }}"
+             aria-label="Jamiyat suhbatlari">
+            
+            <aside class="chat-sidebar" aria-label="Chat kontaktlari">
+                <div class="chat-header-row">
+                    <div>
+                        <span class="eyebrow chat-eyebrow"><span class="eyebrow-dot"></span> KONTAKTLAR</span>
+                        <h2>Foydalanuvchilar</h2>
+                    </div>
+                </div>
+
+                <div class="chat-search-container">
+                    <div class="chat-search-input-wrap">
+                        <svg class="chat-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="chat-contacts-search" class="chat-contacts-search-field" placeholder="Foydalanuvchini qidiring..." autocomplete="off">
+                    </div>
+                </div>
+
+                <ul class="chat-contacts" id="chat-contacts" aria-live="polite">
+                    <li class="chat-list-status">Foydalanuvchilar yuklanmoqda...</li>
+                </ul>
+            </aside>
+
+            <section class="chat-window" aria-live="polite">
+                <header class="chat-window-header">
+                    <div class="chat-person">
+                        <div class="chat-contact-avatar large" id="chat-person-avatar">?</div>
+                        <div>
+                            <h3 class="chat-person-name" id="chat-person-name">Suhbatni tanlang</h3>
+                            <p class="chat-person-status" id="chat-person-status">Jamiyat a’zolariga xabar yuboring</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="chat-messages" id="chat-messages" aria-live="polite">
+                    <p class="chat-list-status">Suhbatni boshlash uchun chap tomondan foydalanuvchini tanlang.</p>
+                </div>
+
+                <!-- Tezkor emojilar qatori -->
+                <div class="chat-quick-emojis-bar" id="chat-quick-emojis-bar">
+                    <span class="quick-emojis-caption">Tezkor emoji:</span>
+                    <button type="button" class="quick-emoji-pill" data-emoji="👋">👋 Salom</button>
+                    <button type="button" class="quick-emoji-pill" data-emoji="👍">👍 Zo‘r</button>
+                    <button type="button" class="quick-emoji-pill" data-emoji="🔥">🔥 Olov</button>
+                    <button type="button" class="quick-emoji-pill" data-emoji="❤️">❤️ Rahmat</button>
+                    <button type="button" class="quick-emoji-pill" data-emoji="🚀">🚀 Qoyil</button>
+                    <button type="button" class="quick-emoji-pill" data-emoji="😊">😊 Xursandman</button>
+                </div>
+
+                <form class="chat-composer" id="chat-composer">
+                    {% csrf_token %}
+                    <label class="sr-only" for="chat-input">Xabar yozish</label>
+                    <input id="chat-input" type="text" name="message" maxlength="1000" placeholder="Xabar yozing... (Enter bosib yuboring)" autocomplete="off" disabled>
+                    <button type="submit" class="button button-primary chat-send-btn" disabled>
+                        <span>Yuborish</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+                <p class="chat-status" id="chat-status" role="status" aria-live="polite"></p>
+            </section>
+        </div>
+    {% else %}
+        <section class="community-chat-panel chat-login-prompt standalone-chat-login" aria-label="Jamiyat suhbatlari">
+            <div class="chat-auth-card">
+                <div class="chat-auth-icon-circle">
+                    <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                    </svg>
+                </div>
+                <span class="eyebrow chat-eyebrow"><span class="eyebrow-dot"></span> JONLI SUHBATLAR</span>
+                <h2>Jamiyat a’zolari bilan suhbatlashing</h2>
+                <p>Barcha do‘stlaringiz va hamkasblaringiz bilan to‘g‘ridan-to‘g‘ri real vaqtda muloqot qilish uchun hisobingizga kiring yoki bepul ro‘yxatdan o‘ting.</p>
+                <div class="chat-auth-btn-row">
+                    <a class="button button-primary" href="{% url 'login' %}?next={% url 'chat' %}">
+                        <span>Kirish va suhbatga qo‘shilish</span>
+                        <span aria-hidden="true">→</span>
+                    </a>
+                    <a class="button button-secondary" href="{% url 'register' %}">
+                        <span>Yangi hisob yaratish</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+</section>
+{% endblock %}
