@@ -1,3 +1,4 @@
 Django>=6.1,<6.2
 django-allauth[socialaccount]>=65.19.7,<66
 python-dotenv>=1.0,<2
+requests==2.34.2
