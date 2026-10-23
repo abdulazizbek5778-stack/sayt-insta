@@ -34,7 +34,7 @@ _allowed_hosts = os.environ.get('ALLOWED_HOSTS', '').strip()
 if _allowed_hosts:
     ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(',') if h.strip()]
 else:
-    ALLOWED_HOSTS = ['*']
+    ALLOWED_HOSTS = ['*', 'sayt-insta.onrender.com', '.onrender.com']
 
 _csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '').strip()
 if _csrf_origins:
@@ -47,6 +47,7 @@ else:
         'http://127.0.0.1:8080',
         'https://*.ngrok-free.app',
         'https://*.ngrok.io',
+        'https://sayt-insta.onrender.com',
     ]
 
 
